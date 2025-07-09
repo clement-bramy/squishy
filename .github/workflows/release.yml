@@ -34,15 +34,12 @@ jobs:
       contents: write
     steps:
       - uses: actions/download-artifact@v4
-      - name: List downloaded files
+      - name: Rename binaries
         run: |
-          echo "Current directory structure:"
-          find . -type f -name "squishy*" -ls
-          ls -la
-          ls -la squishy-linux/ || echo "squishy-linux directory not found"
-          ls -la squishy-macos/ || echo "squishy-macos directory not found"
+          mv squishy-linux/squishy squishy-linux-x86_64
+          mv squishy-macos/squishy squishy-macos-arm64
       - uses: softprops/action-gh-release@v1
         with:
           files: |
-            squishy-linux/squishy
-            squishy-macos/squishy
+            squishy-linux-x86_64
+            squishy-macos-arm64
