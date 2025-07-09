@@ -5,23 +5,37 @@ on:
     tags: ['v*']
 
 jobs:
-  release:
+  build-linux:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    strategy:
-      matrix:
-        include:
-          - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
-          - target: aarch64-apple-darwin
-            os: macos-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --release
+      - uses: actions/upload-artifact@v4
         with:
-          targets: ${{ matrix.target }}
-      - run: cargo build --release --target ${{ matrix.target }}
+          name: squishy-linux
+          path: target/release/squishy
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: squishy-macos
+          path: target/release/squishy
+
+  release:
+    needs: [build-linux, build-macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
       - uses: softprops/action-gh-release@v1
         with:
-          files: target/${{ matrix.target }}/release/squishy*
+          files: |
+            squishy-linux/squishy
+            squishy-macos/squishy
