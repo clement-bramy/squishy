@@ -4,6 +4,9 @@ use std::{
     path::PathBuf,
 };
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+const BUILD_TIMESTAMP: &str = env!("BUILD_TIMESTAMP");
+
 fn main() -> Result<()> {
     banner();
     println!("Starting file detection");
@@ -86,11 +89,13 @@ fn squish(paths: Vec<PathBuf>, mut output: File) -> Result<()> {
 fn banner() {
     println!(
         r"
+Squishy v{} (built: {})
  _____ _____ _____ _____ _____ _____ __ __ 
 |   __|     |  |  |     |   __|  |  |  |  |
 |__   |  |  |  |  |-   -|__   |     |_   _|
 |_____|__  _|_____|_____|_____|__|__| |_|  
          |__|                              
-    "
+    ",
+        VERSION, BUILD_TIMESTAMP
     );
 }
