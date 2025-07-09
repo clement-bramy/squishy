@@ -34,6 +34,13 @@ jobs:
       contents: write
     steps:
       - uses: actions/download-artifact@v4
+      - name: List downloaded files
+        run: |
+          echo "Current directory structure:"
+          find . -type f -name "squishy*" -ls
+          ls -la
+          ls -la squishy-linux/ || echo "squishy-linux directory not found"
+          ls -la squishy-macos/ || echo "squishy-macos directory not found"
       - uses: softprops/action-gh-release@v1
         with:
           files: |
