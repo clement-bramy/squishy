@@ -20,8 +20,8 @@ impl SquishResult {
         }
     }
 
-    pub fn iter_scanned(&self) -> impl IntoIterator<Item = Scanned> {
-        self.scanned.clone().into_iter()
+    pub fn iter_scanned(&self) -> &[Scanned] {
+        &self.scanned
     }
 
     pub fn scanned(&mut self, path: &Path) {
