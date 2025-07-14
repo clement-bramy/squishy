@@ -12,22 +12,22 @@ pub fn squish(paths: Vec<PathBuf>, mut output: File) -> Result<()> {
                 path.display()
             );
 
-            if let Err(error) = writeln!(output, "{}", header) {
-                eprintln!("failed to write header: {}", error);
+            if let Err(error) = writeln!(output, "{header}") {
+                eprintln!("failed to write header: {error}");
                 continue;
             }
-            if let Err(error) = writeln!(output, "{}\n\n", content) {
-                eprintln!("failed to write content to [{:?}]: {}", path, error);
+            if let Err(error) = writeln!(output, "{content}\n\n") {
+                eprintln!("failed to write content to [{}]: {error}", path.display());
                 continue;
             }
             if let Err(error) = output.flush() {
-                eprintln!("failed to flush output buffer: {}", error);
+                eprintln!("failed to flush output buffer: {error}");
                 continue;
             }
         }
     }
 
-    return output.flush();
+    output.flush()
 }
 
 pub fn squish_file() -> Result<File> {

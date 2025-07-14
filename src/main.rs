@@ -15,7 +15,7 @@ fn main() -> Result<()> {
     let files = scan(PathBuf::from("src"))?;
 
     match squish_file() {
-        Err(error) => eprintln!("failed to create squishy file: {}", error),
+        Err(error) => eprintln!("failed to create squishy file: {error}"),
         Ok(output) => squish(files, output)?,
     }
 
@@ -26,13 +26,12 @@ fn main() -> Result<()> {
 fn banner() {
     println!(
         r"
-Squishy v{} (built: {})
+Squishy v{VERSION} (built: {BUILD_TIMESTAMP})
  _____ _____ _____ _____ _____ _____ __ __ 
 |   __|     |  |  |     |   __|  |  |  |  |
 |__   |  |  |  |  |-   -|__   |     |_   _|
 |_____|__  _|_____|_____|_____|__|__| |_|  
          |__|                              
-    ",
-        VERSION, BUILD_TIMESTAMP
+    "
     );
 }
