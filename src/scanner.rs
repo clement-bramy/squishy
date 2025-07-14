@@ -1,25 +1,56 @@
+use std::path::Path;
 use std::{fs, path::PathBuf};
 
 use crate::errors::{Result, SquishError};
+use crate::types::SquishResult;
 
-pub fn scan(dir: PathBuf) -> Result<Vec<PathBuf>> {
-    let mut files = Vec::new();
+pub fn scan(dir: PathBuf) -> Result<SquishResult> {
+    let mut result = SquishResult::new();
 
-    for curr in fs::read_dir(dir)
+    for dir in fs::read_dir(dir)
         .map_err(|source| SquishError::ScanError {
             message: format!("Failed to read directory: {source}"),
         })?
         .flatten()
     {
-        if curr.file_type().is_ok_and(|ft| ft.is_dir()) {
-            match scan(curr.path()) {
-                Ok(mut more) => files.append(&mut more),
-                Err(error) => eprintln!("Failed to scan [{curr:?}]: {error}"),
-            }
-        } else if curr.file_name().to_string_lossy().ends_with(".rs") {
-            files.push(curr.path());
+        match dir.file_type() {
+            Err(_) => result.failure(&dir.path(), "Cannot read"),
+            Ok(filetype) => match (filetype.is_file(), filetype.is_dir()) {
+                (false, true) => {
+                    // directory
+                    if !is_ignored_dir(&dir.path()) {
+                        if let Ok(other) = scan(dir.path()) {
+                            result.extend(other);
+                        }
+                    } else {
+                        result.ignored();
+                    }
+                }
+                (true, false) => {
+                    if is_rust_adjacent(&dir.path()) {
+                        result.scanned(&dir.path());
+                    } else {
+                        result.ignored();
+                    }
+                }
+                // symlink and unknown
+                _ => result.ignored(),
+            },
         }
     }
 
-    Ok(files)
+    Ok(result)
+}
+
+fn is_ignored_dir(path: &Path) -> bool {
+    let ignored = ["target".to_string()];
+    path.file_name()
+        .map(|dirname| ignored.contains(&dirname.to_string_lossy().to_lowercase()))
+        .unwrap_or(false)
+}
+
+fn is_rust_adjacent(path: &Path) -> bool {
+    let extensions = ["rs".to_string(), "toml".to_string()];
+    path.extension()
+        .is_some_and(|ex| extensions.contains(&ex.to_string_lossy().to_lowercase()))
 }

@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use scanner::scan;
-use squish::{squish, squish_file};
+use squish::squish;
 
 use crate::errors::Result;
 
@@ -10,29 +10,17 @@ mod scanner;
 mod squish;
 mod types;
 
-const CHECKMARK: &str = "✓";
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const BUILD_TIMESTAMP: &str = env!("BUILD_TIMESTAMP");
 
 fn main() -> Result<()> {
     banner();
     println!("Starting file detection");
-    let files = scan(PathBuf::from("src"))?;
+    let mut result = scan(PathBuf::from("."))?;
+    squish(&mut result)?;
 
-    match squish_file() {
-        Err(error) => eprintln!("failed to create squishy file: {error}"),
-        Ok(output) => squish(&files, output)?,
-    }
-
-    println!(
-        "Complete!
-Processed {} files",
-        files.len()
-    );
-    files
-        .iter()
-        .for_each(|path| println!("  {CHECKMARK} {}", path.display()));
-
+    result.summary();
+    println!("Complete!");
     Ok(())
 }
 

@@ -1,3 +1,4 @@
+use std::path::Path;
 use std::{
     fs::{self, File, OpenOptions},
     io::Write,
@@ -5,55 +6,70 @@ use std::{
 };
 
 use crate::errors::{Result, SquishError};
+use crate::types::SquishResult;
 
-pub fn squish(paths: &[PathBuf], mut output: File) -> Result<()> {
-    for path in paths {
-        if let Ok(content) = fs::read_to_string(path) {
-            let header = format!(
-                "// ─── {} ───────────────────────────────────────────",
-                path.display()
-            );
+pub fn squish(result: &mut SquishResult) -> Result<()> {
+    let (path, mut output) = squish_file()?;
 
-            if write!(output, "{header}\n{content}\n\n\n").is_err() {
-                eprintln!("Failed to squish: {}", path.display());
-                continue;
+    let mut read_failures = Vec::new();
+    let mut write_failures = Vec::new();
+    let mut success = Vec::new();
+
+    for scanned in result.iter_scanned() {
+        match fs::read_to_string(&scanned.path) {
+            Err(_) => read_failures.push(scanned.path.clone()),
+            Ok(content) => {
+                match write!(
+                    output,
+                    "// ─── {} ───────────────────────────────────────────\n{content}\n\n\n",
+                    scanned.path.display()
+                )
+                .and_then(|()| output.flush())
+                {
+                    Err(_) => write_failures.push(scanned.path.clone()),
+                    Ok(_) => success.push((scanned.path.clone(), content.len())),
+                }
             }
-
-            if let Err(error) = output.flush() {
-                eprintln!("failed to flush output buffer: {error}");
-                continue;
-            }
-        } else {
-            eprintln!("Failed to read file: {}", path.display());
         }
     }
 
-    output
-        .flush()
-        .map_err(|source| SquishError::SquishingError {
-            message: format!("Failed to squish file: {source}"),
-        })
+    read_failures
+        .iter()
+        .for_each(|path| result.failure(path, "Read failure"));
+
+    write_failures
+        .iter()
+        .for_each(|path| result.failure(path, "Write failure"));
+
+    success
+        .iter()
+        .for_each(|(path, size)| result.success(path, *size as u64));
+
+    result.with_output(&path);
+
+    Ok(())
 }
 
-pub fn squish_file() -> Result<File> {
-    ["target", ".", "/tmp"]
+fn squish_file() -> Result<(PathBuf, File)> {
+    let path = ["target", ".", "/tmp"]
         .iter()
         .map(PathBuf::from)
-        .find(can_write_to)
+        .find(|path| can_write_to(&path))
         .map(|output| output.join("squishy.txt"))
         .ok_or_else(|| SquishError::SquishingError {
             message: "Could not find suitable output directory".to_string(),
-        })
-        .map(open_output_file)?
+        })?;
+
+    Ok((path.clone(), open_output_file(&path)?))
 }
 
-fn can_write_to(path: &PathBuf) -> bool {
+fn can_write_to(path: &Path) -> bool {
     fs::metadata(path)
         .map(|metadata| metadata.is_dir() && !metadata.permissions().readonly())
         .unwrap_or(false)
 }
 
-fn open_output_file(path: PathBuf) -> Result<File> {
+fn open_output_file(path: &Path) -> Result<File> {
     OpenOptions::new()
         .create(true)
         .write(true)
