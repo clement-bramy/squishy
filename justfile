@@ -11,7 +11,7 @@ check-all:
 # Run checks and release if they pass
 release: check-all
     @echo "🚀 Running cargo release..."
-    cargo release
+    cargo release --execute
 
 # Fix formatting issues
 fix:
