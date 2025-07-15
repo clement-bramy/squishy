@@ -1,4 +1,6 @@
 use std::path::PathBuf;
+use std::sync::OnceLock;
+use std::time::Instant;
 
 use clap::Parser;
 use scanner::scan;
@@ -17,20 +19,35 @@ mod types;
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 const BUILD_TIMESTAMP: &str = env!("BUILD_TIMESTAMP");
 
+pub static TRACE_TIMING_ENABLED: OnceLock<bool> = OnceLock::new();
+
+#[macro_export]
+macro_rules! timing {
+    ($($arg:tt)*) => {
+        if *$crate::TRACE_TIMING_ENABLED.get_or_init(|| false) {
+            eprintln!("TIMING: {}", format!($($arg)*));
+        }
+    };
+}
+
 fn main() {
-    if let Err(error) = run() {
+    let args = cli::Cli::parse();
+    let _ = TRACE_TIMING_ENABLED.set(args.enable_tracing);
+
+    if let Err(error) = run(args) {
         eprintln!("{error}");
         std::process::exit(1);
     }
 }
 
-fn run() -> Result<()> {
-    let args = cli::Cli::parse();
+fn run(args: cli::Cli) -> Result<()> {
     banner(!args.no_banner);
 
-    println!("Starting file detection");
+    let scan_start = Instant::now();
     let root = PathBuf::from(".");
     let mut result = scan(&root)?;
+    // timing!(format!("Scan duration: {:?}", scan_start.elapsed()));
+    timing!("Scan: {:?}", scan_start.elapsed());
 
     let target = root.join("target");
     let filename = args.output.unwrap_or("squishy.txt".to_string());
@@ -46,7 +63,9 @@ fn run() -> Result<()> {
     let FileDescriptor { mut file, path } = creator.allow_truncate_file(true).create()?;
     squish(&mut result, &mut file, &path)?;
 
-    result.summary();
+    if !args.no_summary {
+        result.summary();
+    }
     println!("Complete!");
     Ok(())
 }

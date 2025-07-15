@@ -7,6 +7,12 @@ pub struct Cli {
     #[arg(long, help = "Disables the cool banner :(")]
     pub no_banner: bool,
 
+    #[arg(long, help = "Disables the summary")]
+    pub no_summary: bool,
+
+    #[arg(long, help = "Enables performance tracing")]
+    pub enable_tracing: bool,
+
     #[arg(long, help = "Output directory [default: target, current, /tmp]")]
     pub outdir: Option<PathBuf>,
 

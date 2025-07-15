@@ -26,23 +26,17 @@ impl SquishResult {
 
     pub fn scanned(&mut self, path: &Path) {
         let result = Scanned::new(path);
-        if !self.scanned.contains(&result) {
-            self.scanned.push(result);
-        }
+        self.scanned.push(result);
     }
 
     pub fn success(&mut self, path: &Path, size: u64) {
         let result = Squished::new(path, size);
-        if !self.squished.contains(&result) {
-            self.squished.push(result);
-        }
+        self.squished.push(result);
     }
 
     pub fn failure(&mut self, path: &Path, error: &str) {
         let result = Failed::new(path, error);
-        if !self.failed.contains(&result) {
-            self.failed.push(result);
-        }
+        self.failed.push(result);
     }
 
     pub fn ignored(&mut self) {
