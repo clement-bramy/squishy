@@ -23,14 +23,36 @@ squishy
 Squishy will automatically:
 - Scan your entire project directory
 - Filter for Rust source files (`.rs`) and configuration files (`.toml`)
-- Exclude irrelevant directories (like `target/`)
+- Exclude irrelevant directories (like `target/` and `.git/`)
 - Generate output with comprehensive processing summary
 - Create output in the best available location (`target/squishy.txt`, `squishy.txt`, or `/tmp/squishy.txt`)
+
+### Command Line Options
+
+```bash
+# Basic usage
+squishy
+
+# Custom output filename
+squishy --output my-project.txt
+
+# Custom output directory
+squishy --outdir /path/to/custom/dir
+
+# Custom directory with filename
+squishy --outdir /path/to/dir --output project-snapshot.txt
+
+# Disable banner (useful for scripting)
+squishy --no-banner
+
+# View help
+squishy --help
+```
 
 ### Example Console Output
 
 ```text
-Squishy v0.1.6 (built: 1752506856)
+Squishy v0.1.8 (built: 1752554103)
  _____ _____ _____ _____ _____ _____ __ __
 |   __|     |  |  |     |   __|  |  |  |  |
 |__   |  |  |  |  |-   -|__   |     |_   _|
@@ -38,15 +60,17 @@ Squishy v0.1.6 (built: 1752506856)
          |__|
 
 Starting file detection
-Squishy file: target/squishy.txt
-Scanned 7 of 162 files
-Processed 7 of 7 (9030 total bytes)
-  ✓ ./Cargo.toml (110 bytes)
-  ✓ ./src/squish.rs (2393 bytes)
-  ✓ ./src/types.rs (3185 bytes)
-  ✓ ./src/scanner.rs (1767 bytes)
-  ✓ ./src/main.rs (786 bytes)
-  ✓ ./src/errors.rs (511 bytes)
+Squishy file: ./target/squishy.txt
+Scanned 9 of 17 files
+Processed 9 of 9 (15914 total bytes)
+  ✓ ./Cargo.toml (242 bytes)
+  ✓ ./src/squish.rs (1441 bytes)
+  ✓ ./src/types.rs (3143 bytes)
+  ✓ ./src/filesystem.rs (6382 bytes)
+  ✓ ./src/cli.rs (422 bytes)
+  ✓ ./src/scanner.rs (1769 bytes)
+  ✓ ./src/main.rs (1641 bytes)
+  ✓ ./src/errors.rs (596 bytes)
   ✓ ./build.rs (278 bytes)
 Complete!
 ```
@@ -85,41 +109,54 @@ pub fn utility_function() {
 
 ## Current Features
 
-- ✅ **Smart project scanning**: Recursively scans entire project directory
-- ✅ **Intelligent file filtering**: Includes `.rs` and `.toml` files, excludes irrelevant directories
-- ✅ **Comprehensive feedback**: Shows file counts, sizes, and processing status
-- ✅ **Success/failure tracking**: Visual indicators for each file with error reporting
-- ✅ **Multiple output locations**: Automatically chooses best location (`target/`, `.`, or `/tmp/`)
-- ✅ **Graceful error handling**: Continues processing even when individual files fail
-- ✅ **Clean file headers**: Clear path separators for easy navigation
-- ✅ **Project-wide context**: Includes configuration files for complete project understanding
+- ✅ **CLI interface**: Command line argument parsing with help, version, and basic options
+- ✅ **Output control**: Custom output directory and filename specification
+- ✅ **Project scanning**: Recursively scans entire project directory
+- ✅ **File filtering**: Includes `.rs` and `.toml` files, excludes `target/`, `.git/`
+- ✅ **Processing feedback**: Shows file counts, sizes, and processing status
+- ✅ **Error tracking**: Visual indicators for each file with error reporting
+- ✅ **Output placement**: Automatic fallback locations with user override capability
+- ✅ **Error handling**: Continues processing when individual files fail, with clear error messages
+- ✅ **File headers**: Clear path separators for easy navigation
+- ✅ **Project context**: Includes configuration files for complete project understanding
+- ✅ **Banner control**: Option to disable banner for scripting use
 
-## Potential Improvements
+## Output Location Behavior
 
-### Command Line Interface
-- [ ] Custom source directory specification
-- [ ] Configurable output filename
-- [ ] Dry-run mode to preview files without generating output
-- [ ] Verbose/quiet output modes
-- [ ] File type inclusion/exclusion options
+### Default Behavior
+When no custom directory is specified, Squishy uses an intelligent fallback chain:
+1. `target/squishy.txt` (if `target/` directory exists and is writable)
+2. `./squishy.txt` (current directory as fallback)
+3. `/tmp/squishy.txt` (system temp directory as last resort)
 
-### File Handling
+### Custom Directory Behavior
+When you specify `--outdir`, Squishy:
+- Uses only the specified directory (no fallbacks)
+- Creates the directory if it doesn't exist (when possible)
+- Fails clearly if the custom location cannot be used
+
+This ensures that explicit user choices are respected while providing helpful defaults for casual usage.
+
+## Planned Improvements
+
+### File Handling Enhancements
 - [ ] `.gitignore` integration for even smarter filtering
 - [ ] Support for additional file types (`.md`, etc.)
 - [ ] Custom include/exclude patterns
 - [ ] Configurable header formats
 - [ ] Workspace support for multi-crate projects
 
-### User Experience
-- [ ] Tree view of processed files
-- [ ] Configuration file support (`.squishyrc`)
+### Advanced Features
+- [ ] Configuration file support (`.squishyrc` - global and project-specific)
+- [ ] Dry-run mode to preview files without generating output
+- [ ] Verbose/quiet output modes
 - [ ] Template support for different output formats
 - [ ] Integration with Cargo as a subcommand
 
-### Code Quality
-- [ ] More specific error types and messaging
-- [ ] Comprehensive test suite
-- [ ] Performance optimizations for large codebases
+### User Experience
+- [ ] Tree view of processed files
+- [ ] Progress indication for large projects
+- [ ] Summary statistics improvements
 - [ ] Better handling of edge cases (symlinks, special files, etc.)
 
 ## Use Cases
@@ -133,25 +170,27 @@ pub fn utility_function() {
 
 ## Smart Filtering
 
-Squishy intelligently processes your project:
+Squishy processes your project by:
 
-- **Includes**: Rust source files (`.rs`), configuration files (`.toml`), build scripts
-- **Excludes**: Build artifacts (`target/`), temporary files, irrelevant directories
-- **Handles**: Permission errors, unreadable files, and other edge cases gracefully
-- **Reports**: Detailed summary of what was scanned, processed, and any failures
+- **Including**: Rust source files (`.rs`), configuration files (`.toml`), build scripts
+- **Excluding**: Build artifacts (`target/`), version control (`.git/`)
+- **Handling**: Permission errors, unreadable files, and other edge cases
+- **Reporting**: Summary of what was scanned, processed, and any failures
 
 ## Requirements
 
 - Rust project (any structure - doesn't require specific directory layout)
-- Write permissions in project directory, `target/` directory, or `/tmp/`
+- Write permissions in target directory, current directory, or `/tmp/` (for default behavior)
+- Write permissions in specified directory (for custom `--outdir` usage)
 
 ## Error Handling
 
-Squishy follows a "fail-safe" approach:
+Squishy follows a "continue on error" approach:
 - Individual file failures don't stop the entire process
-- Clear error reporting for any issues encountered
-- Comprehensive summary shows exactly what succeeded and what failed
+- Clear error messages for issues encountered
+- Summary shows what succeeded and what failed
 - Always produces output even if some files can't be processed
+- Clear failures for invalid custom directories (no silent fallbacks)
 
 ## License
 

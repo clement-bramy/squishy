@@ -1,10 +1,10 @@
+use std::fs;
 use std::path::Path;
-use std::{fs, path::PathBuf};
 
 use crate::errors::{Result, SquishError};
 use crate::types::SquishResult;
 
-pub fn scan(dir: PathBuf) -> Result<SquishResult> {
+pub fn scan(dir: &Path) -> Result<SquishResult> {
     let mut result = SquishResult::new();
 
     for dir in fs::read_dir(dir)
@@ -19,7 +19,7 @@ pub fn scan(dir: PathBuf) -> Result<SquishResult> {
                 (false, true) => {
                     // directory
                     if !is_ignored_dir(&dir.path()) {
-                        if let Ok(other) = scan(dir.path()) {
+                        if let Ok(other) = scan(&dir.path()) {
                             result.extend(other);
                         }
                     } else {
@@ -43,7 +43,7 @@ pub fn scan(dir: PathBuf) -> Result<SquishResult> {
 }
 
 fn is_ignored_dir(path: &Path) -> bool {
-    let ignored = ["target".to_string()];
+    let ignored = ["target".to_string(), ".git".to_string()];
     path.file_name()
         .map(|dirname| ignored.contains(&dirname.to_string_lossy().to_lowercase()))
         .unwrap_or(false)
