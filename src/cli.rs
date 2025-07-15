@@ -13,4 +13,3 @@ pub struct Cli {
     #[arg(short, long, help = "Output filename [default: squishy.txt]")]
     pub output: Option<String>,
 }
-

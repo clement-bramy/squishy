@@ -6,6 +6,6 @@ fn main() {
         .unwrap()
         .as_secs();
 
-    let timestamp = format!("{}", timestamp);
-    println!("cargo:rustc-env=BUILD_TIMESTAMP={}", timestamp);
+    let timestamp = format!("{timestamp}");
+    println!("cargo:rustc-env=BUILD_TIMESTAMP={timestamp}");
 }
