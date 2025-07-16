@@ -1,3 +1,4 @@
+use std::fs::OpenOptions;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 use std::time::Instant;
@@ -6,12 +7,10 @@ use clap::Parser;
 use scanner::scan;
 use squish::squish;
 
-use crate::errors::Result;
-use crate::filesystem::{FileCreator, FileDescriptor};
+use crate::errors::{Result, SquishError};
 
 mod cli;
 mod errors;
-mod filesystem;
 mod scanner;
 mod squish;
 mod types;
@@ -32,7 +31,7 @@ macro_rules! timing {
 
 fn main() {
     let args = cli::Cli::parse();
-    let _ = TRACE_TIMING_ENABLED.set(args.enable_tracing);
+    let _ = TRACE_TIMING_ENABLED.set(args.trace);
 
     if let Err(error) = run(args) {
         eprintln!("{error}");
@@ -41,32 +40,27 @@ fn main() {
 }
 
 fn run(args: cli::Cli) -> Result<()> {
-    banner(!args.no_banner);
+    banner(!args.no_banner && !args.quiet);
 
+    let out = args.out.unwrap_or(PathBuf::from("squishy.txt"));
     let scan_start = Instant::now();
-    let root = PathBuf::from(".");
-    let mut result = scan(&root)?;
-    // timing!(format!("Scan duration: {:?}", scan_start.elapsed()));
+    let source = args.source.unwrap_or(PathBuf::from("."));
+    let mut result = scan(&source)?;
     timing!("Scan: {:?}", scan_start.elapsed());
 
-    let target = root.join("target");
-    let filename = args.output.unwrap_or("squishy.txt".to_string());
+    let mut file = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open(&out)
+        .map_err(|_| SquishError::MissingOutputDirectory { out: out.clone() })?;
 
-    let creator = match args.outdir {
-        Some(outdir) => FileCreator::new(&filename, &outdir).allow_create_dirs(true),
-        None => FileCreator::new(&filename, &target)
-            .with_fallback(&root)
-            .with_fallback(&PathBuf::from("/tmp"))
-            .allow_create_dirs(false),
-    };
+    squish(&mut result, &mut file)?;
 
-    let FileDescriptor { mut file, path } = creator.allow_truncate_file(true).create()?;
-    squish(&mut result, &mut file, &path)?;
-
-    if !args.no_summary {
-        result.summary();
+    if !args.no_summary && !args.quiet {
+        result.summary(&out);
     }
-    println!("Complete!");
+
     Ok(())
 }
 

@@ -1,4 +1,3 @@
-use std::path::Path;
 use std::time::{Duration, Instant};
 use std::{
     fs::{self, File},
@@ -9,7 +8,7 @@ use crate::errors::Result;
 use crate::timing;
 use crate::types::SquishResult;
 
-pub fn squish(result: &mut SquishResult, output: &mut File, path: &Path) -> Result<()> {
+pub fn squish(result: &mut SquishResult, output: &mut File) -> Result<()> {
     let mut read_failures = Vec::new();
     let mut write_failures = Vec::new();
     let mut success = Vec::new();
@@ -57,7 +56,6 @@ pub fn squish(result: &mut SquishResult, output: &mut File, path: &Path) -> Resu
         .iter()
         .for_each(|(path, size)| result.success(path, *size as u64));
 
-    result.with_output(path);
     timing!("Stats: {:?}", stats_start.elapsed());
 
     Ok(())

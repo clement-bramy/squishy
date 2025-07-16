@@ -4,18 +4,21 @@ use std::path::PathBuf;
 #[derive(Parser)]
 #[command(version, about, long_about=None)]
 pub struct Cli {
-    #[arg(long, help = "Disables the cool banner :(")]
+    #[arg(help = "Directory to scan [default: .]")]
+    pub source: Option<PathBuf>,
+
+    #[arg(short, long, help = "Output file [default: squishy.txt]")]
+    pub out: Option<PathBuf>,
+
+    #[arg(long, help = "Disables banner")]
     pub no_banner: bool,
 
-    #[arg(long, help = "Disables the summary")]
+    #[arg(long, help = "Disables report")]
     pub no_summary: bool,
 
-    #[arg(long, help = "Enables performance tracing")]
-    pub enable_tracing: bool,
+    #[arg(short, long, help = "Disables stdout")]
+    pub quiet: bool,
 
-    #[arg(long, help = "Output directory [default: target, current, /tmp]")]
-    pub outdir: Option<PathBuf>,
-
-    #[arg(short, long, help = "Output filename [default: squishy.txt]")]
-    pub output: Option<String>,
+    #[arg(short, long, help = "Enables performance tracing")]
+    pub trace: bool,
 }

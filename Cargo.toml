@@ -9,5 +9,9 @@ publish = false
 # require manual creation of readonly directory
 readonly-test = []
 
+[profile.profiling]
+inherits = "release"
+debug = true
+
 [dependencies]
 clap = { version = "4.5.41", features = ["derive"] }

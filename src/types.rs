@@ -6,7 +6,6 @@ pub struct SquishResult {
     squished: Vec<Squished>,
     failed: Vec<Failed>,
     ignored: u64,
-    output: Option<PathBuf>,
 }
 
 impl SquishResult {
@@ -16,7 +15,6 @@ impl SquishResult {
             squished: Vec::new(),
             failed: Vec::new(),
             ignored: 0,
-            output: None,
         }
     }
 
@@ -47,17 +45,6 @@ impl SquishResult {
         self.squished.iter().map(|sq| sq.size).sum()
     }
 
-    pub fn with_output(&mut self, path: &Path) {
-        self.output = Some(path.to_path_buf());
-    }
-
-    fn output(&self) -> String {
-        self.output
-            .as_ref()
-            .map(|out| out.display().to_string())
-            .unwrap_or("none".to_string())
-    }
-
     pub fn extend(&mut self, other: SquishResult) {
         self.scanned.extend(other.scanned);
         self.squished.extend(other.squished);
@@ -65,7 +52,7 @@ impl SquishResult {
         self.ignored += other.ignored;
     }
 
-    pub fn summary(&self) {
+    pub fn summary(&self, output: &Path) {
         let scanned = self.scanned.len() as u64;
         let total = scanned + self.ignored;
         let success = self.squished.len() as u64;
@@ -74,7 +61,7 @@ impl SquishResult {
             "Squishy file: {}
 Scanned {scanned} of {total} files
 Processed {success} of {scanned} ({} total bytes)",
-            self.output(),
+            output.display(),
             self.size()
         );
 
