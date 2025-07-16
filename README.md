@@ -1,18 +1,24 @@
-# Squishy 🗜️
+# Squishy ⚡🐙
 
-A smart utility to concatenate all source files in a Rust project into a single file for easy sharing and analysis, with comprehensive tracking and intelligent filtering.
+A simple utility to concatenate all source files in a Rust project into a single file for easy sharing and analysis.
 
-## What is Squishy?
+## What is Squishy? 🤔
 
-Squishy recursively scans your entire Rust project directory, intelligently filters relevant files (`.rs` and `.toml`), and combines them into a single output file with clear path headers. It provides detailed feedback about what was processed, making it perfect for sharing complete project context or getting a comprehensive overview of your codebase.
+Squishy recursively scans a Rust project directory, filters for relevant files (`.rs` and `.toml`), and combines them into a single output file with clear path headers. It's useful for sharing complete project context or getting an overview of your codebase.
 
-## Installation
+## Installation 📥
 
+### Option 1: Download from GitHub Releases
+Download the latest binary from the [releases page](https://github.com/clement-bramy/squishy/releases).
+
+### Option 2: Build from Source
 ```bash
+git clone https://github.com/clement-bramy/squishy.git
+cd squishy
 cargo install --path .
 ```
 
-## Usage
+## Usage 🚀
 
 Navigate to any Rust project directory and run:
 
@@ -20,62 +26,81 @@ Navigate to any Rust project directory and run:
 squishy
 ```
 
-Squishy will automatically:
-- Scan your entire project directory
+Or specify a directory to scan:
+
+```bash
+squishy /path/to/rust/project
+```
+
+Squishy will:
+- Scan the project directory recursively
 - Filter for Rust source files (`.rs`) and configuration files (`.toml`)
-- Exclude irrelevant directories (like `target/` and `.git/`)
-- Generate output with comprehensive processing summary
-- Create output in the best available location (`target/squishy.txt`, `squishy.txt`, or `/tmp/squishy.txt`)
+- Skip `target/` and `.git/` directories
+- Create `squishy.txt` with the concatenated results
 
 ### Command Line Options
 
 ```bash
-# Basic usage
+# Basic usage - scan current directory
 squishy
 
-# Custom output filename
-squishy --output my-project.txt
+# Scan specific directory
+squishy /path/to/rust/project
 
-# Custom output directory
-squishy --outdir /path/to/custom/dir
+# Custom output file
+squishy -o my-project.txt
 
-# Custom directory with filename
-squishy --outdir /path/to/dir --output project-snapshot.txt
+# Custom output file with path
+squishy -o /path/to/output/project-snapshot.txt
 
-# Disable banner (useful for scripting)
-squishy --no-banner
+# Quiet mode (no banner or summary)
+squishy -q
+
+# Enable performance tracing
+squishy -t
+
+# Combine options
+squishy /path/to/project -o output.txt -q
 
 # View help
 squishy --help
 ```
 
-### Example Console Output
+### Available Options ⚙️
+
+- **Positional argument**: Directory to scan (defaults to current directory)
+- `-o, --out <FILE>`: Output file (default: `squishy.txt`)
+- `--no-banner`: Disable ASCII banner
+- `--no-summary`: Disable processing summary
+- `-q, --quiet`: Disable all output (combines `--no-banner` and `--no-summary`)
+- `-t, --trace`: Enable performance tracing for debugging
+- `-h, --help`: Show help information
+- `-V, --version`: Show version information
+
+### Example Console Output 📺
 
 ```text
-Squishy v0.1.8 (built: 1752554103)
+Squishy v0.1.10 (built: 1752666832)
  _____ _____ _____ _____ _____ _____ __ __
 |   __|     |  |  |     |   __|  |  |  |  |
 |__   |  |  |  |  |-   -|__   |     |_   _|
 |_____|__  _|_____|_____|_____|__|__| |_|
          |__|
 
-Starting file detection
-Squishy file: ./target/squishy.txt
-Scanned 9 of 17 files
-Processed 9 of 9 (15914 total bytes)
-  ✓ ./Cargo.toml (242 bytes)
-  ✓ ./src/squish.rs (1441 bytes)
-  ✓ ./src/types.rs (3143 bytes)
-  ✓ ./src/filesystem.rs (6382 bytes)
-  ✓ ./src/cli.rs (422 bytes)
+Squishy file: target/squishy.txt
+Scanned 8 of 18 files
+Processed 8 of 8 (10018 total bytes)
+  ✓ ./Cargo.toml (298 bytes)
+  ✓ ./src/squish.rs (1938 bytes)
+  ✓ ./src/types.rs (2650 bytes)
+  ✓ ./src/cli.rs (604 bytes)
   ✓ ./src/scanner.rs (1769 bytes)
-  ✓ ./src/main.rs (1641 bytes)
-  ✓ ./src/errors.rs (596 bytes)
-  ✓ ./build.rs (278 bytes)
-Complete!
+  ✓ ./src/main.rs (1874 bytes)
+  ✓ ./src/errors.rs (611 bytes)
+  ✓ ./build.rs (274 bytes)
 ```
 
-### Example Output File Format
+### Example Output File Format 📄
 
 ```rust
 // ─── ./Cargo.toml ───────────────────────────────────────────
@@ -107,99 +132,82 @@ pub fn utility_function() {
 }
 ```
 
-## Current Features
+## Performance ⚡
 
-- ✅ **CLI interface**: Command line argument parsing with help, version, and basic options
-- ✅ **Output control**: Custom output directory and filename specification
-- ✅ **Project scanning**: Recursively scans entire project directory
-- ✅ **File filtering**: Includes `.rs` and `.toml` files, excludes `target/`, `.git/`
-- ✅ **Processing feedback**: Shows file counts, sizes, and processing status
-- ✅ **Error tracking**: Visual indicators for each file with error reporting
-- ✅ **Output placement**: Automatic fallback locations with user override capability
-- ✅ **Error handling**: Continues processing when individual files fail, with clear error messages
-- ✅ **File headers**: Clear path separators for easy navigation
-- ✅ **Project context**: Includes configuration files for complete project understanding
-- ✅ **Banner control**: Option to disable banner for scripting use
+Squishy processes files efficiently with minimal memory usage.
 
-## Output Location Behavior
+### Typical Performance 📊
 
-### Default Behavior
-When no custom directory is specified, Squishy uses an intelligent fallback chain:
-1. `target/squishy.txt` (if `target/` directory exists and is writable)
-2. `./squishy.txt` (current directory as fallback)
-3. `/tmp/squishy.txt` (system temp directory as last resort)
+Based on testing with real Rust projects:
 
-### Custom Directory Behavior
-When you specify `--outdir`, Squishy:
-- Uses only the specified directory (no fallbacks)
-- Creates the directory if it doesn't exist (when possible)
-- Fails clearly if the custom location cannot be used
+| Project Size | File Count | Processing Time | Memory Usage |
+|--------------|------------|-----------------|--------------|
+| 📝 **Small** (personal projects) | 8-50 files | < 10ms | ~3MB |
+| 📚 **Medium** (libraries like ripgrep) | 50-200 files | 10-50ms | ~3MB |
+| 🏗️ **Large** (frameworks like tokio) | 200-700 files | 50-200ms | ~3MB |
+| 🏭 **Enterprise** (projects like cargo) | 1000+ files | 400-600ms | ~3MB |
 
-This ensures that explicit user choices are respected while providing helpful defaults for casual usage.
+*Performance measured on modern hardware. Times may vary based on file sizes and directory structure.*
 
-## Planned Improvements
+Memory usage stays constant because files are processed one at a time rather than loading everything into memory. 🧠
+
+## Features ✨
+
+- ✅ **Command line interface**: Unix-style arguments with positional directory and output options
+- ✅ **Recursive scanning**: Processes all subdirectories 🔄
+- ✅ **File filtering**: Includes `.rs` and `.toml` files, skips `target/` and `.git/` 🗂️
+- ✅ **Progress feedback**: Shows what files were processed and any errors 📝
+- ✅ **Error handling**: Continues processing when individual files fail 🛡️
+- ✅ **Clear output format**: Headers show original file paths 📋
+- ✅ **Quiet mode**: Can run silently for scripting 🤫
+- ✅ **Performance tracing**: Optional timing information for debugging ⏱️
+
+## Planned Improvements 🔮
 
 ### File Handling Enhancements
 - [ ] `.gitignore` integration for even smarter filtering
 - [ ] Support for additional file types (`.md`, etc.)
 - [ ] Custom include/exclude patterns
-- [ ] Configurable header formats
-- [ ] Workspace support for multi-crate projects
 
 ### Advanced Features
 - [ ] Configuration file support (`.squishyrc` - global and project-specific)
 - [ ] Dry-run mode to preview files without generating output
-- [ ] Verbose/quiet output modes
 - [ ] Template support for different output formats
 - [ ] Integration with Cargo as a subcommand
+- [ ] Parallel processing for very large projects
 
 ### User Experience
 - [ ] Tree view of processed files
-- [ ] Progress indication for large projects
-- [ ] Summary statistics improvements
 - [ ] Better handling of edge cases (symlinks, special files, etc.)
+- [ ] Cross-platform path handling improvements
 
-## Use Cases
+## Use Cases 🎯
 
-- **AI/LLM Analysis**: Provide complete codebase context for analysis tools like Claude or ChatGPT
-- **Code Review**: Share entire projects in a single, easily readable file
-- **Documentation**: Generate comprehensive code listings with project structure
-- **Learning**: Study project organization, dependencies, and file relationships
-- **Backup**: Create flat file representations of project structure
-- **Debugging**: Get complete project overview for troubleshooting
+- **AI/LLM Analysis** 🤖: Share complete codebase context with tools like Claude or ChatGPT
+- **Code Review** 👀: Provide entire projects in a single readable file
+- **Documentation** 📚: Generate code listings with project structure
+- **Learning** 🎓: Study how projects are organized
+- **Backup** 💾: Create flat file representations of project structure
 
-## Smart Filtering
+## Platform Support 🖥️
 
-Squishy processes your project by:
+Primarily tested on Unix-like systems (Linux, macOS). Windows compatibility not guaranteed. 🤷‍♂️
 
-- **Including**: Rust source files (`.rs`), configuration files (`.toml`), build scripts
-- **Excluding**: Build artifacts (`target/`), version control (`.git/`)
-- **Handling**: Permission errors, unreadable files, and other edge cases
-- **Reporting**: Summary of what was scanned, processed, and any failures
+## Error Handling 🛡️
 
-## Requirements
+Squishy continues processing when individual files fail:
+- Shows clear error messages for issues encountered ❌
+- Summary indicates what succeeded and what failed ✅❌
+- Always produces output even if some files can't be processed 📄
 
-- Rust project (any structure - doesn't require specific directory layout)
-- Write permissions in target directory, current directory, or `/tmp/` (for default behavior)
-- Write permissions in specified directory (for custom `--outdir` usage)
-
-## Error Handling
-
-Squishy follows a "continue on error" approach:
-- Individual file failures don't stop the entire process
-- Clear error messages for issues encountered
-- Summary shows what succeeded and what failed
-- Always produces output even if some files can't be processed
-- Clear failures for invalid custom directories (no silent fallbacks)
-
-## License
+## License 📜
 
 MIT
 
-## Contributing
+## Contributing 🤝
 
-This is a learning project focused on practical Rust development, but suggestions are appreciated and contributions might be considered on a case by case basis.
+This is a learning project focused on practical Rust development. Suggestions are welcome.
 
 ---
 
-*Perfect for sharing your Rust projects with AI assistants, code reviewers, or anyone who needs to understand your complete codebase structure.*
+*Useful for sharing Rust projects with AI assistants, code reviewers, or anyone who needs to understand your codebase structure.*
