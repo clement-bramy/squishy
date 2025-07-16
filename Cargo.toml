@@ -15,3 +15,6 @@ debug = true
 
 [dependencies]
 clap = { version = "4.5.41", features = ["derive"] }
+
+[build-dependencies]
+chrono = "0.4.41"

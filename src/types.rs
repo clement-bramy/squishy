@@ -52,16 +52,14 @@ impl SquishResult {
         self.ignored += other.ignored;
     }
 
-    pub fn summary(&self, output: &Path) {
+    pub fn summary(&self) {
         let scanned = self.scanned.len() as u64;
         let total = scanned + self.ignored;
         let success = self.squished.len() as u64;
 
         println!(
-            "Squishy file: {}
-Scanned {scanned} of {total} files
+            "Scanned {scanned} of {total} files
 Processed {success} of {scanned} ({} total bytes)",
-            output.display(),
             self.size()
         );
 
